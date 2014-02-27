@@ -1,0 +1,8 @@
+{
+    "name"          : "Astro::Sunrise",
+    "version"       : "0.01",
+    "description"   : "Find the time of sunrise/sunset on a particular day",
+    "depends"       : [ ],
+    "source-url"    : "git://github.com/perlpilot/p6-Astro-Sunrise.git",
+    "author"        : "Jonathan Scott Duff"
+}
