@@ -11,7 +11,7 @@ my $upper_limb = 'l';
 sub sunrise($year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
 
     my ($h1,$h2);
-    my $d = days_since_2000_Jan_0( $year, $month, $day ) + 0.5 - $lon / 360.0;
+    my $d = days_since_1999_Dec_31( $date ) + 0.5 - $lon / 360.0;
     if ($iter) {
         my ($tmp_rise_1,$tmp_set_1) = sun_rise_set($d, $lon, $lat,$altit,15.04107);
      
@@ -167,14 +167,12 @@ sub sun_RA_dec($d) {
  
 } 
 
-sub days_since_2000_Jan_0( $year, $month, $day ) {
-    my $d =
-      ( 367 * ($year) -
-      ( ( 7 * ( ($year) + ( ( ($month) + 9 ) div 12 ) ) ) div 4 ) +
-      ( ( 275 * ($month) ) div 9 ) + ($day) - 730530 );
- 
-    return $d;
+sub days_since_1999_Dec_31(Date $date)
+{
+    state $epoch = Date.new(:year(1999), :month(12), :day(31));
+    return $date - $epoch;
 }
+
 
 sub sind { sin( ( $^a ) * DEGRAD ); }
  
