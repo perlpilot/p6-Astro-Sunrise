@@ -170,8 +170,8 @@ sub sun_RA_dec($d) {
 sub days_since_2000_Jan_0( $year, $month, $day ) {
     my $d =
       ( 367 * ($year) -
-      ( ( 7 * ( ($year) + ( ( ($month) + 9 ) / 12 ) ) ) / 4 ).Int +
-      ( ( 275 * ($month) ) / 9 ).Int + ($day) - 730530 );
+      ( ( 7 * ( ($year) + ( ( ($month) + 9 ) div 12 ) ) ) div 4 ) +
+      ( ( 275 * ($month) ) div 9 ) + ($day) - 730530 );
  
     return $d;
 }
