@@ -48,11 +48,12 @@ sub sunrise($year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter
     }
 }
 
+# return a pair of DateTimes for sunrise/sunset
 sub sunrise-dt($year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
     my ($sr,$ss) = sunrise($year, $month, $day, $lon, $lat, $tz, $isdst, $altit, $iter);
     my ($rhr,$rmn) = split /\:/, $sr;
     my ($shr,$smn) = split /\:/, $ss;
-   return DateTime.new( :$year, :$month, :$day, :hour($rhr.Int), :minute($rmn.Int) ), 
+    return DateTime.new( :$year, :$month, :$day, :hour($rhr.Int), :minute($rmn.Int) ), 
            DateTime.new( :$year, :$month, :$day, :hour($shr.Int), :minute($smn.Int) );
 }
 
@@ -259,7 +260,6 @@ sub sun_rise ($longitude, $latitude, $alt = -0.833, $offset = 0) is export {
     $today += $offset;
 
     my $toff = DateTime.new(year => $today.year, month => $today.month, day => $today.day).offset;
-
     my ($sun_rise, $) = sunrise( $today.year, $today.month, $today.day,
                                  $longitude, $latitude,
                                  ( $toff / 3600 ),
