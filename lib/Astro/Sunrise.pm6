@@ -8,7 +8,9 @@ constant RADEG = 180 / pi;
 
 my $upper_limb = 'l';
 
-sub sunrise($year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
+proto sunrise(|) {*}
+
+multi sub sunrise(Date $date, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
 
     my ($h1,$h2);
     my $d = days_since_1999_Dec_31( $date ) + 0.5 - $lon / 360.0;
@@ -48,8 +50,9 @@ sub sunrise($year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter
 }
 
 # return a pair of DateTimes for sunrise/sunset
-sub sunrise-dt($year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
-    my ($sr,$ss) = sunrise($year, $month, $day, $lon, $lat, $tz, $isdst, $altit, $iter);
+multi sub sunrise(Int $year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
+    my $date = Date.new(:year(+$year), :month(+$month), :day(+$day));
+    my ($sr,$ss) = sunrise($date, $lon, $lat, $tz, $isdst, $altit, $iter);
     my ($rhr,$rmn) = split /\:/, $sr;
     my ($shr,$smn) = split /\:/, $ss;
     return DateTime.new( :$year, :$month, :$day, :hour($rhr.Int), :minute($rmn.Int) ), 
