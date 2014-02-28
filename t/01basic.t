@@ -34,8 +34,11 @@ for @data {
 
     my ($sunrise, $sunset) = sunrise( $test_year, $test_month, $test_day, $long, $lat, $offset, 0 );
 
-    is($sunrise, $<sunrise>, "Sunrise for $<city>, $<country>");
-    is($sunset , $<sunset>, "Sunset for $<city>, $<country>");
+    my $sunrise_str = $sunrise.hour.fmt("%02d") ~ ":" ~ $sunrise.minute.fmt("%02d");
+    my $sunset_str = $sunset.hour.fmt("%02d") ~ ":" ~ $sunset.minute.fmt("%02d");
+
+    is($sunrise_str, $<sunrise>, "Sunrise for $<city>, $<country>");
+    is($sunset_str , $<sunset>, "Sunset for $<city>, $<country>");
 }
 
 
