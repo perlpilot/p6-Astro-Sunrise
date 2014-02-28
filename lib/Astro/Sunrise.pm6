@@ -10,8 +10,9 @@ my $upper_limb = 'l';
 
 sub sunrise($year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
 
+    my ($h1,$h2);
+    my $d = days_since_2000_Jan_0( $year, $month, $day ) + 0.5 - $lon / 360.0;
     if ($iter) {
-        my $d = days_since_2000_Jan_0( $year, $month, $day ) + 0.5 - $lon / 360.0;
         my ($tmp_rise_1,$tmp_set_1) = sun_rise_set($d, $lon, $lat,$altit,15.04107);
      
         # Now we have the initial rise/set times next recompute d using the exact moment
@@ -39,13 +40,11 @@ sub sunrise($year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter
              ($dummy,$tmp_set_3) = sun_rise_set($d_sunset_2, $lon, $lat,$altit,15.04107);
         }
         
-        
-        return convert_hour($tmp_rise_3, $tmp_set_3, $tz, $isdst);
+        ($h1,$h2) = ($tmp_rise_3, $tmp_set_3);
     } else {
-        my $d = days_since_2000_Jan_0( $year, $month, $day ) + 0.5 - $lon / 360.0;
-        my ($h1,$h2) = sun_rise_set($d, $lon, $lat, $altit, 15.0);
-        return convert_hour($h1, $h2, $tz, $isdst);
+        ($h1,$h2) = sun_rise_set($d, $lon, $lat, $altit, 15.0);
     }
+    return convert_hour($h1, $h2, $tz, $isdst);
 }
 
 # return a pair of DateTimes for sunrise/sunset
