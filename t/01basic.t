@@ -6,9 +6,9 @@ use Astro::Sunrise;
 my @data = load_data();
 plan(5 + 2 * @data); # I prefer having Perl counting my tests than myself
 
-my $test_year  = '2003';
-my $test_month = '6';
-my $test_day   = '21';
+my $test_year  = 2003;
+my $test_month = 6;
+my $test_day   = 21;
 
 my ($lat, $long, $offset);
 for @data {
