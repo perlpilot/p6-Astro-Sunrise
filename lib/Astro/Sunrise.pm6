@@ -255,28 +255,19 @@ sub convert_hour($hour_rise_ut, $hour_set_ut, $tz, $isdst) {
  
 }
 
-sub sun_rise ($longitude, $latitude, $alt = -0.833, $offset = 0) is export {
+sub _helper($longitude, $latitude, $alt = -0.833, $offset = 0) {
     my $today = DateTime.now.local.Date;
     $today += $offset;
 
     my $toff = DateTime.new(year => $today.year, month => $today.month, day => $today.day).offset;
-    my ($sun_rise, $) = sunrise( $today.year, $today.month, $today.day,
-                                 $longitude, $latitude,
-                                 ( $toff / 3600 ),
-                                 0,
-                                 $alt );
-    return $sun_rise;
+    return sunrise( $today, $longitude, $latitude, ( $toff / 3600 ), 0, $alt );
+}
+ 
+
+sub sun_rise ($longitude, $latitude, $alt = -0.833, $offset = 0) is export {
+    return (_helper($longitude, $latitude, $alt, $offset))[0]
 }
 
 sub sun_set ($longitude, $latitude, $alt = -0.833, $offset = 0) is export {
-    my $today = DateTime.now.local.Date;
-    $today += $offset;
- 
-    my $toff = DateTime.new(year => $today.year, month => $today.month, day => $today.day).offset;
-    my ($, $sun_set) = sunrise( $today.year, $today.month, $today.day,
-                                $longitude, $latitude,
-                                ( $toff / 3600 ),
-                                0,
-                                $alt );
-    return $sun_set;
+    return (_helper($longitude, $latitude, $alt, $offset))[1]
 }
