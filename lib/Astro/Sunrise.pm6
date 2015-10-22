@@ -15,7 +15,7 @@ multi sub sunrise(Date $date, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = 
     my ($h1,$h2);
     my $d = days_since_1999_Dec_31( $date ) + 0.5 - $lon / 360.0;
     if ($iter) {
-        my ($tmp_rise_1,$tmp_set_1) = sun_rise_set($d, $lon, $lat,$altit,15.04107);
+        my ($tmp_rise_1,$tmp_set_1) = sun_rise_set($d, $lon, $lat, $altit, 15.04107);
      
         # Now we have the initial rise/set times next recompute d using the exact moment
         # recompute sunrise
