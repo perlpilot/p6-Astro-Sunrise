@@ -1,4 +1,4 @@
-module Astro::Sunrise;
+unit module Astro::Sunrise;
 
 # port of Perl 5 code
 # See https://metacpan.org/source/JFORGET/Astro-Sunrise-0.92/Sunrise.pm
