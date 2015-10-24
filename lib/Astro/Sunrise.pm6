@@ -6,40 +6,39 @@ unit module Astro::Sunrise;
 constant DEGRAD = pi / 180;
 constant RADEG = 180 / pi;
 
-my $upper_limb = 'l';
+# See http://www.stjarnhimlen.se/comp/riset.html
+constant LHA-TO-DEGREES = 15.04107;
 
 proto sunrise(|) {*}
 
-multi sub sunrise(Date $date, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
+multi sub sunrise(Date $date, $lon, $lat, $tz = 0, $altit = -0.833, Bool :$isdst = False, Bool :$iter = False) is export {
 
     my ($h1,$h2);
     my $d = days_since_1999_Dec_31( $date ) + 0.5 - $lon / 360.0;
     if ($iter) {
-        my ($tmp_rise_1,$tmp_set_1) = sun_rise_set($d, $lon, $lat, $altit, 15.04107);
+        my ($tmp_rise_1,$tmp_set_1) = sun_rise_set($d, $lon, $lat, $altit, LHA-TO-DEGREES);
      
         # Now we have the initial rise/set times next recompute d using the exact moment
         # recompute sunrise
      
         my $tmp_rise_2 = 9;
         my $tmp_rise_3 = 0;
-        my $dummy;
         until (equal($tmp_rise_2, $tmp_rise_3, 8) )   {
-             my $d_sunrise_1 = $d + $tmp_rise_1/24.0;
-             ($tmp_rise_2,$dummy) = sun_rise_set($d_sunrise_1, $lon, $lat,$altit,15.04107);
+             my $d_sunrise_1 = $d + $tmp_rise_1 / 24.0;
+             ($tmp_rise_2,$) = sun_rise_set($d_sunrise_1, $lon, $lat, $altit, LHA-TO-DEGREES);
              $tmp_rise_1 = $tmp_rise_3;
-             my $d_sunrise_2 = $d + $tmp_rise_2/24.0;
-             ($tmp_rise_3,$dummy) = sun_rise_set($d_sunrise_2, $lon, $lat,$altit,15.04107);
+             my $d_sunrise_2 = $d + $tmp_rise_2 / 24.0;
+             ($tmp_rise_3,$) = sun_rise_set($d_sunrise_2, $lon, $lat, $altit, LHA-TO-DEGREES);
         }
      
         my $tmp_set_2 = 9;
         my $tmp_set_3 = 0;
-     
         until (equal($tmp_set_2, $tmp_set_3, 8) )   {
-             my $d_sunset_1 = $d + $tmp_set_1/24.0;
-             ($dummy,$tmp_set_2) = sun_rise_set($d_sunset_1, $lon, $lat,$altit,15.04107);
+             my $d_sunset_1 = $d + $tmp_set_1 / 24.0;
+             ($,$tmp_set_2) = sun_rise_set($d_sunset_1, $lon, $lat, $altit, LHA-TO-DEGREES);
              $tmp_set_1 = $tmp_set_3;
-             my $d_sunset_2 = $d + $tmp_set_2/24.0;
-             ($dummy,$tmp_set_3) = sun_rise_set($d_sunset_2, $lon, $lat,$altit,15.04107);
+             my $d_sunset_2 = $d + $tmp_set_2 / 24.0;
+             ($,$tmp_set_3) = sun_rise_set($d_sunset_2, $lon, $lat, $altit, LHA-TO-DEGREES);
         }
         
         ($h1,$h2) = ($tmp_rise_3, $tmp_set_3);
@@ -50,16 +49,24 @@ multi sub sunrise(Date $date, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = 
 }
 
 # return a pair of DateTimes for sunrise/sunset
-multi sub sunrise(Int $year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
+multi sub sunrise(Cool(Int) $year, $month, $day, $lon, $lat, $tz = 0, $altit = -0.833, Bool :$isdst = False, :$iter = False) is export {
     my $date = Date.new(:year(+$year), :month(+$month), :day(+$day));
-    my ($sr,$ss) = sunrise($date, $lon, $lat, $tz, $isdst, $altit, $iter);
+    my ($sr,$ss) = sunrise($date, $lon, $lat, $tz, $altit, :$isdst, :$iter);
     my ($rhr,$rmn) = split /\:/, $sr;
     my ($shr,$smn) = split /\:/, $ss;
     return DateTime.new( :$year, :$month, :$day, :hour($rhr.Int), :minute($rmn.Int) ), 
            DateTime.new( :$year, :$month, :$day, :hour($shr.Int), :minute($smn.Int) );
 }
 
-sub sun_rise_set($d, $lon, $lat, $altit is copy, $UNKNOWN) {
+# From http://www.stjarnhimlen.se/comp/riset.html WRT $divisor ...
+#   to convert LHA from degrees to hours, divide by 15.04107 instead of
+#   15.0 (this accounts for the difference between the solar day and the
+#   sidereal day. You should only use 15.04107 if you intend to iterate;
+#   if you don't want to iterate, use 15.0 as before since that will
+#   give an approximate correction for the Earth's orbital motion during
+#   the day).
+
+sub sun_rise_set($d, $lon, $lat, $altit is copy, $divisor = 15.0) {
     # Compute local sidereal time of this moment
     my $sidtime = revolution( GMST0($d) + 180.0 + $lon );
  
@@ -67,14 +74,11 @@ sub sun_rise_set($d, $lon, $lat, $altit is copy, $UNKNOWN) {
     my ( $sRA, $sdec, $sr ) = sun_RA_dec($d);
  
     # Compute time when Sun is at south - in hours UT
-    my $tsouth  = 12.0 - rev180( $sidtime - $sRA ) / 15.0;
+    my $tsouth  = 12.0 - rev180( $sidtime - $sRA ) / $divisor;
  
     # Compute the Sun's apparent radius, degrees
     my $sradius = 0.2666 / $sr;
- 
-    if ($upper_limb) {
-        $altit -= $sradius;
-    }
+    $altit -= $sradius;
  
     # Compute the diurnal arc that the Sun traverses to reach
     # the specified altitude altit:
@@ -93,7 +97,7 @@ sub sun_rise_set($d, $lon, $lat, $altit is copy, $UNKNOWN) {
         $t = 12.0;    # Sun always above altit
     }
     else {
-        $t = acosd($cost) / 15.0;    # The diurnal arc, hours
+        $t = acosd($cost) / $divisor;    # The diurnal arc, hours
     }
  
     # Store rise and set times - in hours UT
@@ -203,7 +207,7 @@ sub equal($A,$B,$dp) {
     return sprintf("%.{$dp}g", $A) eq sprintf("%.{$dp}g", $B);
 }
  
-sub convert_hour($hour_rise_ut, $hour_set_ut, $tz, $isdst) {
+sub convert_hour($hour_rise_ut, $hour_set_ut, $tz, Bool $isdst) {
  
   my $rise_local = $hour_rise_ut + $tz;
   my $set_local = $hour_set_ut + $tz;
@@ -260,7 +264,7 @@ sub _helper($longitude, $latitude, $alt = -0.833, $offset = 0) {
     $today += $offset;
 
     my $toff = DateTime.new(year => $today.year, month => $today.month, day => $today.day).offset;
-    return sunrise( $today, $longitude, $latitude, ( $toff / 3600 ), 0, $alt );
+    return sunrise( $today, $longitude, $latitude, ( $toff / 3600 ), $alt );
 }
  
 
