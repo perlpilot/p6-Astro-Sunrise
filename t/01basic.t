@@ -29,10 +29,10 @@ for @data {
     $long = sprintf( "%.3f", ( $<londeg> + ( $<lonmin> / 60 ) ) );
     $long = -$long if $<londir> eq 'W';
 
-    if ($long < 0 )   { $offset = ceiling( $long / 15 ); }
-    elsif ($long > 0 )   { $offset = floor( $long / 15 ); }
+    if $long < 0    { $offset = ceiling( $long / 15 ); }
+    elsif $long > 0 { $offset = floor( $long / 15 ); }
 
-    my ($sunrise, $sunset) = sunrise( $test_year, $test_month, $test_day, $long, $lat, $offset, 0 );
+    my ($sunrise, $sunset) = sunrise( $test_year, $test_month, $test_day, $long, $lat, $offset );
 
     my $sunrise_str = $sunrise.hour.fmt("%02d") ~ ":" ~ $sunrise.minute.fmt("%02d");
     my $sunset_str = $sunset.hour.fmt("%02d") ~ ":" ~ $sunset.minute.fmt("%02d");
