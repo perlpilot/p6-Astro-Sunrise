@@ -8,12 +8,14 @@ constant RADEG = 180 / pi;
 
 my $upper_limb = 'l';
 
-sub sunrise($year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
+proto sunrise(|) {*}
+
+multi sub sunrise(Date $date, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
 
     my ($h1,$h2);
-    my $d = days_since_2000_Jan_0( $year, $month, $day ) + 0.5 - $lon / 360.0;
+    my $d = days_since_1999_Dec_31( $date ) + 0.5 - $lon / 360.0;
     if ($iter) {
-        my ($tmp_rise_1,$tmp_set_1) = sun_rise_set($d, $lon, $lat,$altit,15.04107);
+        my ($tmp_rise_1,$tmp_set_1) = sun_rise_set($d, $lon, $lat, $altit, 15.04107);
      
         # Now we have the initial rise/set times next recompute d using the exact moment
         # recompute sunrise
@@ -48,8 +50,9 @@ sub sunrise($year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter
 }
 
 # return a pair of DateTimes for sunrise/sunset
-sub sunrise-dt($year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
-    my ($sr,$ss) = sunrise($year, $month, $day, $lon, $lat, $tz, $isdst, $altit, $iter);
+multi sub sunrise(Int $year, $month, $day, $lon, $lat, $tz, $isdst, $altit = -0.833, $iter = False) is export {
+    my $date = Date.new(:year(+$year), :month(+$month), :day(+$day));
+    my ($sr,$ss) = sunrise($date, $lon, $lat, $tz, $isdst, $altit, $iter);
     my ($rhr,$rmn) = split /\:/, $sr;
     my ($shr,$smn) = split /\:/, $ss;
     return DateTime.new( :$year, :$month, :$day, :hour($rhr.Int), :minute($rmn.Int) ), 
@@ -167,14 +170,12 @@ sub sun_RA_dec($d) {
  
 } 
 
-sub days_since_2000_Jan_0( $year, $month, $day ) {
-    my $d =
-      ( 367 * ($year) -
-      ( ( 7 * ( ($year) + ( ( ($month) + 9 ) div 12 ) ) ) div 4 ) +
-      ( ( 275 * ($month) ) div 9 ) + ($day) - 730530 );
- 
-    return $d;
+sub days_since_1999_Dec_31(Date $date)
+{
+    state $epoch = Date.new(:year(1999), :month(12), :day(31));
+    return $date - $epoch;
 }
+
 
 sub sind { sin( ( $^a ) * DEGRAD ); }
  
@@ -254,28 +255,19 @@ sub convert_hour($hour_rise_ut, $hour_set_ut, $tz, $isdst) {
  
 }
 
-sub sun_rise ($longitude, $latitude, $alt = -0.833, $offset = 0) is export {
+sub _helper($longitude, $latitude, $alt = -0.833, $offset = 0) {
     my $today = DateTime.now.local.Date;
     $today += $offset;
 
     my $toff = DateTime.new(year => $today.year, month => $today.month, day => $today.day).offset;
-    my ($sun_rise, $) = sunrise( $today.year, $today.month, $today.day,
-                                 $longitude, $latitude,
-                                 ( $toff / 3600 ),
-                                 0,
-                                 $alt );
-    return $sun_rise;
+    return sunrise( $today, $longitude, $latitude, ( $toff / 3600 ), 0, $alt );
+}
+ 
+
+sub sun_rise ($longitude, $latitude, $alt = -0.833, $offset = 0) is export {
+    return (_helper($longitude, $latitude, $alt, $offset))[0]
 }
 
 sub sun_set ($longitude, $latitude, $alt = -0.833, $offset = 0) is export {
-    my $today = DateTime.now.local.Date;
-    $today += $offset;
- 
-    my $toff = DateTime.new(year => $today.year, month => $today.month, day => $today.day).offset;
-    my ($, $sun_set) = sunrise( $today.year, $today.month, $today.day,
-                                $longitude, $latitude,
-                                ( $toff / 3600 ),
-                                0,
-                                $alt );
-    return $sun_set;
+    return (_helper($longitude, $latitude, $alt, $offset))[1]
 }
