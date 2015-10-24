@@ -3,6 +3,9 @@
     "perl"          : "v6",
     "version"       : "0.01",
     "description"   : "Find the time of sunrise/sunset on a particular day",
+    "provides"      : {
+        "Astro::Sunrise" : "lib/Astro/Sunrise.pm"
+    },
     "depends"       : [ ],
     "test-depends"  : [ ],
     "build-depends" : [ ],
