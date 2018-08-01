@@ -4,7 +4,7 @@
     "version"       : "0.0.1",
     "description"   : "Find the time of sunrise/sunset on a particular day",
     "provides"      : {
-        "Astro::Sunrise" : "lib/Astro/Sunrise.pm"
+        "Astro::Sunrise" : "lib/Astro/Sunrise.pm6"
     },
     "depends"       : [ ],
     "test-depends"  : [ "Test" ],
